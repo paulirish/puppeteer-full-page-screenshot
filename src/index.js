@@ -5,8 +5,10 @@ import Jimp from 'jimp';
 
 const pageDown = async ( page ) => {
     const isEnd = await page.evaluate( () => {
-        window.scrollBy( 0, window.innerHeight );
-        return window.scrollY >= document.documentElement.scrollHeight - window.innerHeight;
+        const screenshotCaptureMax = 16 * 1024;
+        const viewportHeight = Math.floor(screenshotCaptureMax / window.devicePixelRatio) - 1;
+        window.scrollBy( 0, viewportHeight );
+        return window.scrollY >= document.documentElement.scrollHeight - viewportHeight;
     } );
 
     return isEnd;
@@ -16,10 +18,12 @@ const fullPageScreenshot = async ( page, options = {}, quality = 100) => {
     const { pagesCount, extraPixels, viewport } = await page.evaluate( () => {
         window.scrollTo( 0, 0 );
         const pageHeight = document.documentElement.scrollHeight;
+        const screenshotCaptureMax = 16 * 1024; // https://bugs.chromium.org/p/chromium/issues/detail?id=770769
+        const viewportHeight = Math.floor(screenshotCaptureMax / window.devicePixelRatio) - 1;
         return {
-            pagesCount: Math.ceil( pageHeight / window.innerHeight ),
-            extraPixels: pageHeight % window.innerHeight * window.devicePixelRatio,
-            viewport: { height: window.innerHeight * window.devicePixelRatio, width: window.innerWidth * window.devicePixelRatio },
+            pagesCount: Math.ceil( pageHeight / viewportHeight ),
+            extraPixels: pageHeight % viewportHeight * window.devicePixelRatio,
+            viewport: { height: viewportHeight * window.devicePixelRatio, width: window.innerWidth * window.devicePixelRatio },
         };
     } );
 
